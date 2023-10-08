@@ -1,0 +1,61 @@
+---
+# Create the dirs we need
+- name: Create dirs for puppet
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - /etc/puppet
+    - /var/lib/puppet/ssl
+    - /var/log/puppet
+    - /opt/puppetlabs/puppet
+  become: true
+
+# Install ruby-fully
+- name: Install ruby-full
+  apt:
+    name: ruby-full
+    state: present
+  become: true
+
+# Install puppet and facter via gem
+- name: Install puppet and facter via gem
+  gem:
+    name: "{{ item }}"
+    state: present
+    user_install: false
+  loop:
+    - puppet
+    - facter
+  become: true
+
+# Install the puppet-agent service for systemd
+- name: Install puppet-agent service for systemd
+  copy:
+    src: puppet-agent.service
+    dest: /etc/systemd/system/puppet-agent.service
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+# Enable the service but do not start
+- name: Enable puppet-agent service for systemd
+  ansible.builtin.service:
+    name: puppet-agent
+    enabled: true
+    state: stopped
+    daemon_reload: true
+  become: true
+
+# Ensure the IP of our puppet server is in /etc/hosts for 'puppet'
+- name: Ensure the IP of our puppet server is in /etc/hosts for 'puppet'
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ puppet_server_ip }} puppet"
+    state: present
+    create: true
+  become: true

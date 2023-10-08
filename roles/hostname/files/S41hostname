@@ -1,0 +1,33 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          S41hostname
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Sets the hostname on boot
+### END INIT INFO
+
+# Define the hostname prefix
+HOSTNAME_PREFIX="node"
+
+# Get the first network interface name, excluding loopbacks, virtual interfaces, and non-numeric characters, and remove leading whitespace
+IFACE_NAME=$(ip link | awk -F: '$0 !~ "br|docker|lo|sit|veth|vir|^[^0-9]"{print $2; getline}' | head -n 1 | sed -e 's/^[[:space:]]*//')
+
+# Get the MAC address of the first network interface
+MAC_ADDRESS=$(cat "/sys/class/net/${IFACE_NAME}/address")
+
+# Remove colons from the MAC address and take the last 6 characters
+SHORT_MAC=${MAC_ADDRESS//:/}
+SHORT_MAC=${SHORT_MAC: -6}
+
+# Set the hostname
+HOSTNAME="${HOSTNAME_PREFIX}-${SHORT_MAC}"
+echo "$HOSTNAME" >/etc/hostname
+hostname -F /etc/hostname
+
+# Add hostname to /etc/hosts
+sed -i "s/^127\.0\.1\.1.*/127\.0\.1\.1\t${HOSTNAME} ${HOSTNAME}.local/" /etc/hosts
+
+# Add information to log
+logger -t hostname -p info "Setting hostname to ${HOSTNAME} (IFACE_NAME=${IFACE_NAME}, MAC_ADDRESS=${MAC_ADDRESS}, SHORT_MAC=${SHORT_MAC})"

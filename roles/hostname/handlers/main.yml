@@ -1,0 +1,9 @@
+---
+# I'm not sure we actually want this behavior on our VM, only when a real node boots.
+- name: Reboot system
+  reboot:
+    reboot_timeout: 300
+    msg: "Reboot initiated by Ansible for hostname change"
+  async: 1
+  poll: 0
+  become: true

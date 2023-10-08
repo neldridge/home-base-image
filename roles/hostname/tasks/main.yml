@@ -1,0 +1,22 @@
+---
+## Install the script to update hostname on boot
+- name: Install hostname update script
+  copy:
+    src: S41hostname
+    dest: /etc/init.d/S41hostname
+    owner: root
+    group: root
+    mode: 0755
+  become: true
+  # notify: Reboot system
+
+# ensure this runs on boot, and is started once
+- name: Enable service S41hostname, and not touch the state
+  ansible.builtin.service:
+    name: S41hostname
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true
+  # notify: Reboot system
+
