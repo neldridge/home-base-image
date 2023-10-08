@@ -42,6 +42,16 @@
     mode: 0644
   become: true
 
+# Install the puppet.conf
+- name: Install puppet.conf
+  copy:
+    src: puppet.conf
+    dest: /etc/puppet/puppet.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
 # Enable the service but do not start
 - name: Enable puppet-agent service for systemd
   ansible.builtin.service:
@@ -55,6 +65,7 @@
 - name: Ensure the IP of our puppet server is in /etc/hosts for 'puppet'
   lineinfile:
     path: /etc/hosts
+    regexp: " puppet$"
     line: "{{ puppet_server_ip }} puppet"
     state: present
     create: true
